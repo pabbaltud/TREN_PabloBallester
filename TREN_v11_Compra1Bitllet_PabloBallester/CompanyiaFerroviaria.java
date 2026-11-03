@@ -437,6 +437,8 @@ public class CompanyiaFerroviaria {
 		//1. Mostra els trajectes (llistaTrajectes). Si no n'hi ha, finalitza.
 		//2. L'usuari tria un trajecte i es mostra el seu detall i el del tren.
 		
+		//-- TREBALL 2 INICI --
+		
 		int posTra = triaPosicio(llistaTrajectes(), "TRAJECTE", "Elegir");
 			if (posTra == -1 )return;
 		Trajecte traElegir = (posTra < 0) ? null : trajectes.get(posTra);
