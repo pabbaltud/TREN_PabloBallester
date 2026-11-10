@@ -1,4 +1,4 @@
-package TREN_v10_Compra1Bitllet;
+package TREN_v10_Compra1Bitllet.TREN_V11_CompraBitllet_PabloBallester;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -19,7 +19,7 @@ import java.util.Calendar;
  * Una Categoria només pot estar en un Trajecte i un Vagó només en una Categoria.
  */
 public class CompanyiaFerroviaria {
-
+	
 	static String nomCompanyia = "RENFE";
 	static ArrayList<Trajecte> trajectes = new ArrayList<Trajecte>();
 	static ArrayList<Tren> trens = new ArrayList<Tren>();

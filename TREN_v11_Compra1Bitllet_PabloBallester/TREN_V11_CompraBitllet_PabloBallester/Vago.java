@@ -1,4 +1,4 @@
-package TREN_v10_Compra1Bitllet;
+package TREN_v10_Compra1Bitllet.TREN_V11_CompraBitllet_PabloBallester;
 
 /**
  * Vagó d'un tren.

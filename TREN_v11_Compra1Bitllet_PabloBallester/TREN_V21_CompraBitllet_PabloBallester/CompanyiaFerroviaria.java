@@ -1,8 +1,10 @@
-package TREN_v10_Compra1Bitllet;
+package TREN_v10_Compra1Bitllet.TREN_V21_CompraBitllet_PabloBallester;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Calendar;
+
+
 
 /**
  * Classe principal del projecte FERROVIARI (v1.0: ESQUELET per a l'alumnat).
@@ -19,7 +21,7 @@ import java.util.Calendar;
  * Una Categoria només pot estar en un Trajecte i un Vagó només en una Categoria.
  */
 public class CompanyiaFerroviaria {
-
+	
 	static String nomCompanyia = "RENFE";
 	static ArrayList<Trajecte> trajectes = new ArrayList<Trajecte>();
 	static ArrayList<Tren> trens = new ArrayList<Tren>();
@@ -158,8 +160,13 @@ public class CompanyiaFerroviaria {
 				break;
 
 			case 14: //Comprar BITLLET
-				compraBitlletTrajecte();
-				break;
+                try {
+                    compraBitlletTrajecte();
+                } catch (InterruptedException e) {
+					System.out.println("ERROR: "+e.getMessage());
+                    throw new RuntimeException(e);
+                }
+                break;
 
 			case 0:
 				System.out.println("Eixint de l'aplicació " + nomCompanyia + "...\nPrograma finalitzat!!!");
@@ -407,6 +414,10 @@ public class CompanyiaFerroviaria {
 	}
 
 	//*****************************************************************
+	
+	
+	
+	
 	//PAGAMENT D'UN BITLLET
 	//Mostra l'import, simula el retard del pagament i demana la confirmació.
 	//Retorna si el pagament s'ha fet amb èxit.
@@ -427,88 +438,114 @@ public class CompanyiaFerroviaria {
 		return Validacio.validaBoolea("¿Confirmas la compra? [S/N] ");
 		
 	}
+	
+	//-- TREBALL 2 INICI --
+	
+	//************ CLASE HILOS ***********
+	public static class HiloBillete implements Runnable {
+		
+		@Override
+		public void run() {
+			//TODO TREBALL 1
+			//1. Mostra els trajectes (llistaTrajectes). Si no n'hi ha, finalitza.
+			//2. L'usuari tria un trajecte i es mostra el seu detall i el del tren.
+            
+            
+            try {
+                int posTra = triaPosicio(llistaTrajectes(), "TRAJECTE", "Elegir");
+                if (posTra == -1 )return;
+                Trajecte traElegir = (posTra < 0) ? null : trajectes.get(posTra);
+                System.out.println("======== TRAYECTO ELEGIDO: "+traElegir.getOrigen()+"-"+traElegir.getDesti()+" : "+traElegir.mostraDataFormatada()+" ========");
+                //   Si el trajecte no té tren, finalitza.
+                if (traElegir == null ) return;
+                
+                //3. Mostra les categories del trajecte (llistarCategoriesTrajecte) i l'usuari en tria una.
+                
+                int posCategoriaElegir = triaPosicio(traElegir.llistarCategoriesTrajecte(),"CATEGORIA", "Elegir");
+                if (posCategoriaElegir == -1)return;
+                Categoria categoriaElegir = (posCategoriaElegir < 0) ? null : traElegir.getCategoriesTrajecte().get(posCategoriaElegir);
+                System.out.println("======== CATEGORIA ELEGIDA: "+categoriaElegir.getNomCategoria()+" "+categoriaElegir.getPreu()+"€ ========");
+                if(categoriaElegir == null) return;
+                
+                
+                //4. Mostra els vagons de la categoria (1) i l'usuari en tria un.
+                int posVagonElegir = triaPosicio(categoriaElegir.llistarVagonsCategoria(),"VAGONS", "Elegir");
+                if (posVagonElegir == -1)return;
+                Vago vagonElegir = (posCategoriaElegir < 0) ? null : categoriaElegir.getVagonsCategoria().get(posVagonElegir);
+                if(categoriaElegir == null) return;
+                //   Si no n'hi ha o el vagó no té seients lliures (numSeientsLliures), finalitza.
+                if (vagonElegir.numSeientsLliures() != 0){
+                    
+                    //5. Mostra el mapa del vagó (mapaVago).
+                    vagonElegir.mapaVago();
+                    
+                    //6. Demana el seient (p.e. "7A") i obtín-lo amb getSeient. Si no existeix o no està
+                    //   LLIURE (verificaSeient), informa i torna a demanar-lo (0 = cancel·lar la compra).ç
+                    //   ATENCIÓ: si el seient no està lliure NO li canvies l'estat, és d'un altre client.
+                    Seient seientElegido = null;
+                    Boolean seientCorrecto = false;
+                    
+                    do {
+                        String codiSeient = Validacio.validaCadena("Elige tu asiento  (p.e. '7A') [0 = cancel·lar la compra]: ");
+                        
+                        if (codiSeient.equals("0")) {
+                            System.out.println("\tCompra cancelada per l'usuari.");
+                            return;
+                        }
+                        
+                        seientElegido = vagonElegir.getSeient(codiSeient);
+                        
+                        if (seientElegido == null){
+                            System.out.println("\tERROR: El seient no existeix al vagó o està mal escrit. Torna a intentar-ho.");
+                        } else {
+                            if (seientElegido.verificaSeient()) {
+                                //   Quan el seient és lliure, reserva'l (reservaSeient).
+                                seientCorrecto = true;
+                                seientElegido.reservaSeient();
+                                //7. Demana el pagament (pagamentBitllet amb el preu de la categoria).
+                                if (pagamentBitllet(categoriaElegir.getPreu())){
+                                    //8. Si s'ha pagat: ocupa el seient (ocupaSeient) i imprimeix el bitllet (imprimirBitllet).
+                                    seientElegido.ocupaSeient();
+                                    vagonElegir.imprimirBitllet(seientElegido,categoriaElegir,traElegir);
+                                } else {
+                                    //9. Si no s'ha pagat: allibera el seient (alliberaSeient).
+                                    seientElegido.alliberaSeient();
+                                }
+                                //10. Mostra el mapa resultant del vagó.
+                                System.out.println("======== MAPA FINAL DEL VAGON: "+codiSeient+" ========");
+                                vagonElegir.mapaVago();
+                                
+                            } else {
+                                System.out.println("\tERROR: El seient ja està ocupat o reservat por un altre client.");
+                            }
+                        }
+                    } while (!seientCorrecto);
+                }
+            } catch (Exception e) {
+				System.out.println("ERROR: "+e.getMessage());
+                throw new RuntimeException(e);
+            }
+        }//run()
+	}//clase
 
 	//*****************************************************************
 	//COMPRA INTERACTIVA D'UN BITLLET
 	//Ordre lògic: Trajecte -> Categoria -> Vagó -> Seient -> Pagament.
 	//En qualsevol pas, si no hi ha opcions o l'usuari tria 0, la compra acaba sense fer res.
-	public static void compraBitlletTrajecte() {
-		//TODO TREBALL 1
-		//1. Mostra els trajectes (llistaTrajectes). Si no n'hi ha, finalitza.
-		//2. L'usuari tria un trajecte i es mostra el seu detall i el del tren.
+	public static synchronized void compraBitlletTrajecte() throws InterruptedException{
+		int numHilos = 2;
 		
-		//-- TREBALL 2 INICI --
+		Thread [] hilosBilletes = new Thread[numHilos];
+		for (int i = 0; i < hilosBilletes.length; i++) {
+			hilosBilletes[i] = new Thread(new HiloBillete());
+			hilosBilletes[i].setName("Hilo "+(i+1));
+		}
 		
-		int posTra = triaPosicio(llistaTrajectes(), "TRAJECTE", "Elegir");
-			if (posTra == -1 )return;
-		Trajecte traElegir = (posTra < 0) ? null : trajectes.get(posTra);
-		System.out.println("======== TRAYECTO ELEGIDO: "+traElegir.getOrigen()+"-"+traElegir.getDesti()+" : "+traElegir.mostraDataFormatada()+" ========");
-		//   Si el trajecte no té tren, finalitza.
-		if (traElegir == null ) return;
-			
-			//3. Mostra les categories del trajecte (llistarCategoriesTrajecte) i l'usuari en tria una.
-			
-			int posCategoriaElegir = triaPosicio(traElegir.llistarCategoriesTrajecte(),"CATEGORIA", "Elegir");
-				if (posCategoriaElegir == -1)return;
-			Categoria categoriaElegir = (posCategoriaElegir < 0) ? null : traElegir.getCategoriesTrajecte().get(posCategoriaElegir);
-			System.out.println("======== CATEGORIA ELEGIDA: "+categoriaElegir.getNomCategoria()+" "+categoriaElegir.getPreu()+"€ ========");
-			if(categoriaElegir == null) return;
-			
-			
-			//4. Mostra els vagons de la categoria (1) i l'usuari en tria un.
-				int posVagonElegir = triaPosicio(categoriaElegir.llistarVagonsCategoria(),"VAGONS", "Elegir");
-					if (posVagonElegir == -1)return;
-				Vago vagonElegir = (posCategoriaElegir < 0) ? null : categoriaElegir.getVagonsCategoria().get(posVagonElegir);
-				if(categoriaElegir == null) return;
-				//   Si no n'hi ha o el vagó no té seients lliures (numSeientsLliures), finalitza.
-				if (vagonElegir.numSeientsLliures() != 0){
-					
-					//5. Mostra el mapa del vagó (mapaVago).
-					vagonElegir.mapaVago();
-					
-					//6. Demana el seient (p.e. "7A") i obtín-lo amb getSeient. Si no existeix o no està
-					//   LLIURE (verificaSeient), informa i torna a demanar-lo (0 = cancel·lar la compra).ç
-					//   ATENCIÓ: si el seient no està lliure NO li canvies l'estat, és d'un altre client.
-					Seient seientElegido = null;
-					Boolean seientCorrecto = false;
-					
-					do {
-						String codiSeient = Validacio.validaCadena("Elige tu asiento  (p.e. '7A') [0 = cancel·lar la compra]: ");
-						
-						if (codiSeient.equals("0")) {
-							System.out.println("\tCompra cancelada per l'usuari.");
-							return;
-						}
-						
-						seientElegido = vagonElegir.getSeient(codiSeient);
-						
-						if (seientElegido == null){
-							System.out.println("\tERROR: El seient no existeix al vagó o està mal escrit. Torna a intentar-ho.");
-						} else {
-							if (seientElegido.verificaSeient()) {
-								//   Quan el seient és lliure, reserva'l (reservaSeient).
-								seientCorrecto = true;
-								seientElegido.reservaSeient();
-								//7. Demana el pagament (pagamentBitllet amb el preu de la categoria).
-								if (pagamentBitllet(categoriaElegir.getPreu())){
-									//8. Si s'ha pagat: ocupa el seient (ocupaSeient) i imprimeix el bitllet (imprimirBitllet).
-									seientElegido.ocupaSeient();
-									vagonElegir.imprimirBitllet(seientElegido,categoriaElegir,traElegir);
-								} else {
-									//9. Si no s'ha pagat: allibera el seient (alliberaSeient).
-									seientElegido.alliberaSeient();
-								}
-								//10. Mostra el mapa resultant del vagó.
-								System.out.println("======== MAPA FINAL DEL VAGON: "+codiSeient+" ========");
-								vagonElegir.mapaVago();
-								
-							} else {
-								System.out.println("\tERROR: El seient ja està ocupat o reservat por un altre client.");
-							}
-						}
-                    } while (!seientCorrecto);
-				}
-	}
+		for (int i = 0; i < hilosBilletes.length; i++) {
+			hilosBilletes[i].start();
+			hilosBilletes[i].join();
+		}
+    }//compraBillet
 
 	//*****************************************************************
 	//MENÚ PRINCIPAL. Retorna l'opció triada (0-14).

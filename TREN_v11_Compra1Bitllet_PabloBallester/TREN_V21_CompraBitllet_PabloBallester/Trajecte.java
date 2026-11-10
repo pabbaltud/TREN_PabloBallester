@@ -1,4 +1,4 @@
-package TREN_v10_Compra1Bitllet;
+package TREN_v10_Compra1Bitllet.TREN_V21_CompraBitllet_PabloBallester;
 
 import java.util.ArrayList;
 import java.util.Calendar;

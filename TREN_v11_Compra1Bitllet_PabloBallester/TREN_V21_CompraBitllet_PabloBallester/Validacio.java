@@ -1,4 +1,4 @@
-package TREN_v10_Compra1Bitllet;
+package TREN_v10_Compra1Bitllet.TREN_V21_CompraBitllet_PabloBallester;
 
 import java.math.BigDecimal;
 import java.util.Calendar;
@@ -29,7 +29,7 @@ public class Validacio {
 	//*****************************************************************
 	//Mostra el missatge i retorna la línia introduïda (sense espais als extrems)
 	private static String llegeixLinia(String missatge) {
-		System.out.print(missatge);
+		System.out.print("[Hilo Actual utilizado: + "+Thread.currentThread().getName()+"] "+missatge);
 		return teclat.nextLine().trim();
 	}
 
