@@ -1,4 +1,4 @@
-package TREN_v10_Compra1Bitllet.CINE_V11_CompraBitllet_PabloBallester;
+package TREN_v10_Compra1Bitllet.CINE_V12_CompraBitllet_PabloBallester;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
